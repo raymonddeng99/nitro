@@ -39,7 +39,7 @@ void ArduCAM_CS_init(void){
 	//Configure PE12 output type as No Pull-Up, No Pull-Down
 	GPIOE->PUPDR &= ~GPIO_PUPDR_PUPD12;
 
-	// CS_HIGH();
+	CS_HIGH();
 }
 
 // CS_PORT = E

@@ -122,6 +122,9 @@ void SPI_Init(void){
 	//		CHANGE TO: Enable CRC calculation
 	SPI1->CR1 |= (SPI_CR1_CRCEN);
 
+	//		ADD: CRC length = 8
+	SPI1->CR1 &= ~(SPI_CR1_CRCL);
+
 	// Set: 
 	//		the board to operate in master mode
 	SPI1->CR1 |= SPI_CR1_MSTR;
@@ -142,19 +145,13 @@ void SPI_Init(void){
 	// Set the FIFO reception threshold to 1/4 (8 bit)
 	SPI1->CR2 |= SPI_CR2_FRXTH;
 
+	// Set CRC polynomial := 7
+	SPI1->CRCPR = 7;
+
 	/*
-
-	Configure CRCL, CRCEN if CRC is needed
-	Write to SPI_CRCPR register if needed
-		Read about smaller details of CRC: what to do if SPI is off, etc..
-
-		The CRC polynomial (0007h) is the reset value of this register. Another polynomial can be configured as required.
-
-		What does CRC_Poly7 mean??
-
+	DMA enable:
 	SPI1->CR2 |= SPI_CR2_RXDMAEN;
 	SPI1->CR2 |= SPI_CR2_TXDMAEN;
-
 	*/
 
 	// Enable SPI 
