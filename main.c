@@ -29,7 +29,7 @@ void configs(){
 	SysTick_Init();
 	SPI1_Init();
 
-	// sccb_bus_init();
+	//sccb_bus_init();
 	//ArduCAM_Init(sensor_model);
 }
 

@@ -46,9 +46,6 @@ void sccb_bus_init(void){
 
 uint8_t sccb_bus_write_byte(uint8_t data){
 	I2C_SendData(I2C1, 0x60, data, 1);
-
-	// return PBin(11) (is SDA H or L?)
-
 	return 1;
 }
 

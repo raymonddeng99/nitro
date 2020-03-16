@@ -26,7 +26,6 @@ void ArduCAM_CS_init(void){
 	// Enable GPIO Clocks
 	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOEEN;
 	
-	
 	// Set PE12 to output mode
 	GPIOE->MODER &= ~GPIO_MODER_MODE12;
 	GPIOE->MODER |= GPIO_MODER_MODE12_0;
@@ -77,12 +76,16 @@ uint8_t bus_write(int address,int value){
 }
 
 uint8_t read_reg(uint8_t addr){
+	// 0x7f = 127 = 0111 1111
+	// first bit of address determines read/write. 0 => read, 1 => write
 	uint8_t data = bus_read(addr & 0x7F);
 	return data;
 }
 
 void write_reg(uint8_t addr, uint8_t data){
-	 bus_write(addr | 0x80, data); 
+	// 0x80 = 128 = 1000 0000
+	// first bit of address determines read/write. 0 => read, 1 => write
+	bus_write(addr | 0x80, data); 
 }
 
 uint8_t read_fifo(void){
@@ -113,7 +116,7 @@ uint32_t read_fifo_length(void){
   	len2 = read_reg(FIFO_SIZE2);
   	len3 = read_reg(FIFO_SIZE3) & 0x7f;
   	len = ((len3 << 16) | (len2 << 8) | len1) & 0x07fffff;
-		return len;	
+	return len;	
 }
 
 //Set corresponding bit  
