@@ -71,7 +71,6 @@ void SPI1_GPIO_Init(){
 }
 
 void SPI_Init(void){
-	printf("Start of SPI_Init()\n");
 	SPI1->CR1 &= ~(SPI_CR1_SPE);
 	
 	// Enable SPI1 clock in peripheral clock register
@@ -131,6 +130,9 @@ void SPI_Init(void){
 	//		CHANGE TO: disable software slave management
 	SPI1->CR1 &= ~(SPI_CR1_SSM);
 
+	//		ADD: SSOE = 1 (SSM = 0)
+	SPI1->CR2 |= SPI_CR2_SSOE;
+
 	//		enable NSS pulse management
 	SPI1->CR2 |= SPI_CR2_NSSP;
 
@@ -140,18 +142,29 @@ void SPI_Init(void){
 	// Set the FIFO reception threshold to 1/4 (8 bit)
 	SPI1->CR2 |= SPI_CR2_FRXTH;
 
+	/*
+
+	Configure CRCL, CRCEN if CRC is needed
+	Write to SPI_CRCPR register if needed
+		Read about smaller details of CRC: what to do if SPI is off, etc..
+
+		The CRC polynomial (0007h) is the reset value of this register. Another polynomial can be configured as required.
+
+		What does CRC_Poly7 mean??
+
+	SPI1->CR2 |= SPI_CR2_RXDMAEN;
+	SPI1->CR2 |= SPI_CR2_TXDMAEN;
+
+	*/
+
 	// Enable SPI 
 	SPI1->CR1 |= SPI_CR1_SPE;
 }
 
 /*
-	DMA provides high-speed transfer between peripherals and memory.
-	2 DMA controllers have 14 channels in total, each dedicated to managing memory access requests from >=1 peripherals.
-	Each has an arbiter for handling the priority between DMA requests.
-
-	Channel 4, request num 1: SPI2_RX
-	Channel 5, request num 1: SPI2_TX
-	Channel 6, request num 2: USART1_TX
+	Channel 2, request num 1: SPI1_RX
+	Channel 3, request num 1: SPI1_TX
+	Channel 4, request num 2: USART1_TX
 */
 void DMA_config(){
 	// Set peripheral register address in DMA->CPARx register (!!!!!)
@@ -160,82 +173,82 @@ void DMA_config(){
   	DMA->InitStructure.DMA->PeripheralBaseAddr = (u32)&USART2->DR;
   	*/
 
-	DMA1_Channel4->CPAR = (u32)(SPI1_BASE + 0x0C);
-	DMA1_Channel5->CPAR = (u32)(SPI1_BASE + 0x0C);
-	DMA2_Channel6->CPAR = (u32)(USART2_BASE + 0x28);
+	DMA1_Channel2->CPAR = (u32)(SPI1_BASE + 0x0C);
+	DMA1_Channel3->CPAR = (u32)(SPI1_BASE + 0x0C);
+	DMA1_Channel4->CPAR = (u32)(USART1_BASE + 0x28);
 
 	// Set memory address in DMA->CMARx register
 	// Configure total amount of memory to be transferred in DMA->CNDTRx register
 	// 			see DMA1_RX, DMA1_SendtoUsart
 
 	// Configure channel priority using PL[1:0] in DMA->CCRx 
+	DMA1_Channel2->CCR |= DMA_CCR_PL;
+	DMA1_Channel2->CCR &= ~(DMA_CCR_PL_0);
+
+	DMA1_Channel3->CCR |= DMA_CCR_PL;
+	DMA1_Channel3->CCR &= ~(DMA_CCR_PL_0);
+
 	DMA1_Channel4->CCR |= DMA_CCR_PL;
-	DMA1_Channel4->CCR &= ~(DMA_CCR_PL_0);
-
-	DMA1_Channel5->CCR |= DMA_CCR_PL;
-	DMA1_Channel5->CCR &= ~(DMA_CCR_PL_0);
-
-	DMA2_Channel5->CCR |= DMA_CCR_PL;
 
 	// Configure:
-	//		M2M mode (Arducam disables this)
+	//		M2M mode
+	DMA1_Channel2->CCR &= ~(DMA_CCR_MEM2MEM);
+	DMA1_Channel3->CCR &= ~(DMA_CCR_MEM2MEM);
 	DMA1_Channel4->CCR &= ~(DMA_CCR_MEM2MEM);
-	DMA1_Channel5->CCR &= ~(DMA_CCR_MEM2MEM);
-	DMA2_Channel6->CCR &= ~(DMA_CCR_MEM2MEM);
 
 	//		data transfer direction
-	DMA1_Channel4->CCR &= ~(DMA_CCR_DIR);
-	DMA1_Channel5->CCR |= DMA_CCR_DIR;
-	DMA2_Channel6->CCR |= DMA_CCR_DIR;
+	DMA1_Channel2->CCR &= ~(DMA_CCR_DIR);
+	DMA1_Channel3->CCR |= DMA_CCR_DIR;
+	DMA1_Channel4->CCR |= DMA_CCR_DIR;
 
 	//		circular mode
+	DMA1_Channel2->CCR &= ~(DMA_CCR_CIRC);
+	DMA1_Channel3->CCR &= ~(DMA_CCR_CIRC);
 	DMA1_Channel4->CCR &= ~(DMA_CCR_CIRC);
-	DMA1_Channel5->CCR &= ~(DMA_CCR_CIRC);
-	DMA2_Channel6->CCR &= ~(DMA_CCR_CIRC);
 
 
 	//		peripheral and memory incremented mode
+	DMA1_Channel2->CCR |= DMA_CCR_MINC;
+	DMA1_Channel2->CCR &= ~(DMA_CCR_PINC);
+
+	DMA1_Channel3->CCR |= DMA_CCR_MINC;
+	DMA1_Channel3->CCR &= ~(DMA_CCR_PINC);
+
 	DMA1_Channel4->CCR |= DMA_CCR_MINC;
 	DMA1_Channel4->CCR &= ~(DMA_CCR_PINC);
 
-	DMA1_Channel5->CCR |= DMA_CCR_MINC;
-	DMA1_Channel5->CCR &= ~(DMA_CCR_PINC);
-
-	DMA2_Channel6->CCR |= DMA_CCR_MINC;
-	DMA2_Channel6->CCR &= ~(DMA_CCR_PINC);
-
 	//		peripheral data size
+	DMA1_Channel2->CCR |= DMA_CCR_PSIZE;
+	DMA1_Channel2->CCR &= ~(DMA_CCR_PSIZE_0);
+
+	DMA1_Channel3->CCR |= DMA_CCR_PSIZE;
+	DMA1_Channel3->CCR &= ~(DMA_CCR_PSIZE_0);
+
 	DMA1_Channel4->CCR |= DMA_CCR_PSIZE;
 	DMA1_Channel4->CCR &= ~(DMA_CCR_PSIZE_0);
 
-	DMA1_Channel5->CCR |= DMA_CCR_PSIZE;
-	DMA1_Channel5->CCR &= ~(DMA_CCR_PSIZE_0);
-
-	DMA2_Channel6->CCR |= DMA_CCR_PSIZE;
-	DMA2_Channel6->CCR &= ~(DMA_CCR_PSIZE_0);
-
 	// 		memory data size
+	DMA1_Channel2->CCR |= DMA_CCR_MSIZE;
+	DMA1_Channel2->CCR &= ~(DMA_CCR_MSIZE_0);
+
+	DMA1_Channel3->CCR |= DMA_CCR_MSIZE;
+	DMA1_Channel3->CCR &= ~(DMA_CCR_MSIZE_0);
+
 	DMA1_Channel4->CCR |= DMA_CCR_MSIZE;
 	DMA1_Channel4->CCR &= ~(DMA_CCR_MSIZE_0);
 
-	DMA1_Channel5->CCR |= DMA_CCR_MSIZE;
-	DMA1_Channel5->CCR &= ~(DMA_CCR_MSIZE_0);
-
-	DMA2_Channel6->CCR |= DMA_CCR_MSIZE;
-	DMA2_Channel6->CCR &= ~(DMA_CCR_MSIZE_0);
-
 	//		interrupt after half/full transfer in DMA->CCRx register
+	DMA1_Channel2->CCR |= DMA_CCR_TCIE;
+	DMA1_Channel3->CCR |= DMA_CCR_TCIE;  
 	DMA1_Channel4->CCR |= DMA_CCR_TCIE;
-	DMA1_Channel5->CCR |= DMA_CCR_TCIE;  
-	DMA2_Channel6->CCR |= DMA_CCR_TCIE;
 }
 
 void NVIC_Config(){
+  	NVIC_EnableIRQ(DMA1_Channel2_IRQn);
+	NVIC_SetPriority(DMA1_Channel2_IRQn, 0);
+
   	NVIC_EnableIRQ(DMA1_Channel4_IRQn);
 	NVIC_SetPriority(DMA1_Channel4_IRQn, 0);
-
-  	NVIC_EnableIRQ(DMA1_Channel6_IRQn);
-	NVIC_SetPriority(DMA1_Channel6_IRQn, 0);
 }
 
 void SPI1_Init(void){
@@ -260,7 +273,7 @@ u8 SPI1_ReadWriteByte(u8 TxData){
 
 
 /*
-	Only 16 bits (65535) can be transferred at a time; maybe look into circular mode
+	Only 16 bits (65535) can be transferred at a time; maybe look into circular mode?
 
 	"If the channel is configured in non-circular mode, no DMA request is served after the last transfer
 	(that is once the num of data items to be transferred has reached zero). In order to reload a new number
@@ -286,25 +299,25 @@ void DMA1_RX(uint8_t *p , uint32_t len){
 		Do I left shift address by 2?
 	*/
 	
-	DMA1_Channel4->CMAR = (u32)p << 2;
-	DMA1_Channel4->CNDTR = (u16)len;
-	DMA1_Channel5->CMAR = (u32)p << 2;
-	DMA1_Channel5->CNDTR = (u16)len;
+	DMA1_Channel2->CMAR = (u32)p << 2;
+	DMA1_Channel2->CNDTR = (u16)len;
+	DMA1_Channel3->CMAR = (u32)p << 2;
+	DMA1_Channel3->CNDTR = (u16)len;
+
 	/*
-	
-	Syntax errors here:
 
-	DMA1_CSELR &= ~(DMA_CSELR_C4S | DMA_CSELR_C5S);
-	DMA1_CSELR |= (1 << 12 | 1 << 16);
+	typedef struct{
+  		__IO uint32_t CSELR;
+	} DMA_Request_TypeDef;
 
-	DMA2_CSELR &= ~(DMA_CSELR_C6S);
-	DMA2_CSELR |= (1 << 21);
+	DMA1_CSELR &= ~(DMA_CSELR_C2S | DMA_CSELR_C3S | DMA_CSELR_C4S);
+	DMA1_CSELR |= (1 << 4 | 1 << 8 | 1 << 13);
 	
 	*/
 
 	// Active channel by setting ENABLE bit in DMA->CCRx register
-	DMA1_Channel4->CCR |= DMA_CCR_EN;
-	DMA1_Channel5->CCR |= DMA_CCR_EN;
+	DMA1_Channel2->CCR |= DMA_CCR_EN;
+	DMA1_Channel3->CCR |= DMA_CCR_EN;
 }
 
 void DMA1_SendtoUsart(uint8_t *p , uint32_t len){
@@ -313,10 +326,10 @@ void DMA1_SendtoUsart(uint8_t *p , uint32_t len){
 		return;
 	}
 
-	DMA2_Channel6->CMAR = (u32)p << 2;
-	DMA2_Channel6->CNDTR = (u16)len;
+	DMA1_Channel4->CMAR = (u32)p << 2;
+	DMA1_Channel4->CNDTR = (u16)len;
 
-	DMA2_Channel6->CCR |= DMA_CCR_EN;
+	DMA1_Channel4->CCR |= DMA_CCR_EN;
 }
 
 void SendbyUSART1(void){	
@@ -356,7 +369,7 @@ void SingleCapTransfer(void){
 	DMA1_RX(picbuf, sendlen);
 }
 
-void DMA4_Channel1_IRQHandler(void){ 	
+void DMA1_Channel2_IRQHandler(void){ 	
 	/*
 	if(DMA->GetITStatus(DMA1_IT_TC4)){
 		DMA->ClearITPendingBit(DMA1_IT_GL4 | DMA1_IT_TC4 | DMA1_IT_GL5 | DMA1_IT_TC5);
@@ -372,7 +385,7 @@ void DMA4_Channel1_IRQHandler(void){
 }
 
 
-void DMA6_Channel2_IRQHandler(void){
+void DMA1_Channel4_IRQHandler(void){
 	/*
 	if(DMA->GetITStatus(DMA1_IT_TC7)){
 		DMA->ClearITPendingBit(DMA1_IT_GL7 | DMA1_IT_TC7);

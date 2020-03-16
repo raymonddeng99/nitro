@@ -29,8 +29,11 @@ void configs(){
 	SysTick_Init();
 	SPI1_Init();
 
-	//sccb_bus_init();
-	//ArduCAM_Init(sensor_model);
+	I2C_GPIO_Init();
+	I2C_Initialization();
+
+	// Test if I2C protocol works:
+	// ArduCAM_Init(sensor_model);
 }
 
 void check_SPI_interface(){

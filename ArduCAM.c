@@ -39,7 +39,7 @@ void ArduCAM_CS_init(void){
 	//Configure PE12 output type as No Pull-Up, No Pull-Down
 	GPIOE->PUPDR &= ~GPIO_PUPDR_PUPD12;
 
-	CS_HIGH();
+	// CS_HIGH();
 }
 
 // CS_PORT = E
@@ -67,10 +67,10 @@ uint8_t bus_read(int address){
 
 uint8_t bus_write(int address,int value){	
 	CS_LOW();
-	delay_us(10);
+	SPI_Delay(10);
 	SPI1_ReadWriteByte(address);
 	SPI1_ReadWriteByte(value);
-	delay_us(10);
+	SPI_Delay(10);
 	CS_HIGH();
 	return 1;
 }
@@ -163,67 +163,29 @@ void set_mode(uint8_t mode){
 }
 
 byte wrSensorReg8_8(int regID, int regDat){
-	/*
-	delay_us(5);
-	sccb_bus_start();                          
-	if(sccb_bus_write_byte(sensor_addr) == 0){
-		sccb_bus_stop();                        
-		return 1;
-	}
-	delay_us(5);
-	if(sccb_bus_write_byte(regID) == 0){
-		sccb_bus_stop();                              
+	if(sccb_bus_write_byte(regID) == 0){           
 		return 2;                                       
 	}
-	delay_us(5);
-	if(sccb_bus_write_byte(regDat)==0){
-		sccb_bus_stop();                                 
+	if(sccb_bus_write_byte(regDat)==0){                      
 		return 3;
-	}
-	sccb_bus_stop();                                    
+	}                               
 	return 0;
-	*/
 }
 
 
 byte rdSensorReg8_8(uint8_t regID, uint8_t* regDat){
-	/*
-	delay_us(10);
-	
-	sccb_bus_start();
-	if(sccb_bus_write_byte(sensor_addr) == 0)                 
-	{
-		sccb_bus_stop();                                
-		//goto start;
-		return 1;                                        
-	}
-	delay_us(10);
-	if(sccb_bus_write_byte(regID)==0)//ID
-	{
-		sccb_bus_stop();                                  
-		//goto start;
+	if(sccb_bus_write_byte(regID)==0){
 		return 2;                                       
 	}
-	sccb_bus_stop();                                   
-	delay_us(10);	
-	sccb_bus_start();
-	if(sccb_bus_write_byte(sensor_addr|0x01)==0)                    
-	{
-		sccb_bus_stop();                                   
-		//goto start;
+	if(sccb_bus_write_byte(sensor_addr|0x01)==0){
 		return 3;                                          
 	}
-	delay_us(10);
-	*regDat = sccb_bus_read_byte();                    
-	sccb_bus_send_noack();                                
-	sccb_bus_stop();                                      
-	return 0;    
-*/	
+	*regDat = sccb_bus_read_byte();                              
+	return 0; 
 }
 
 //I2C Array Write 8bit address, 8bit data
 int wrSensorRegs8_8(const struct sensor_reg reglist[]){
-	/*
   int err = 0;
   uint16_t reg_addr = 0;
   uint16_t reg_val = 0;
@@ -238,43 +200,30 @@ int wrSensorRegs8_8(const struct sensor_reg reglist[]){
   }
 
   return err;
-	*/
 }
 
 byte wrSensorReg16_8(int regID, int regDat){
-	/*
-	sccb_bus_start();
 	if(0==sccb_bus_write_byte(sensor_addr))
 	{
-		sccb_bus_stop();
 		return(0);
 	}
-	delay_us(5);
   if(0==sccb_bus_write_byte(regID>>8))
 	{
-		sccb_bus_stop();
 		return(0);
 	}
-	delay_us(5);
   if(0==sccb_bus_write_byte(regID))
 	{
-		sccb_bus_stop();
 		return(0);
 	}
-	delay_us(5);
   if(0==sccb_bus_write_byte(regDat))
 	{
-		sccb_bus_stop();
 		return(0);
 	}
-  sccb_bus_stop();
 	
   return(1);
-	*/
 }
 
 int wrSensorRegs16_8(const struct sensor_reg reglist[]){
-	/*
   int err = 0;
 
   unsigned int reg_addr;
@@ -290,47 +239,26 @@ int wrSensorRegs16_8(const struct sensor_reg reglist[]){
     next++;
   }
   return err;
-	*/
 }
 
 
 byte rdSensorReg16_8(uint16_t regID, uint8_t* regDat){
-	/*
-	sccb_bus_start();                  
 	if(0==sccb_bus_write_byte(0x78))
 	{
-		sccb_bus_stop();
 		return(0);
 	}
-	delay_us(20);
-	delay_us(20);
   if(0==sccb_bus_write_byte(regID>>8))
 	{
-		sccb_bus_stop();
 		return(0);
 	}
-	delay_us(20);
   if(0==sccb_bus_write_byte(regID))
 	{
-		sccb_bus_stop();
 		return(0);
-	}
-	delay_us(20);
-	sccb_bus_stop();
-	
-	delay_us(20);
-	
-	
-	sccb_bus_start();                 
+	}          
 	if(0==sccb_bus_write_byte(0x79))
 	{
-		sccb_bus_stop();
 		return(0);
 	}
-	delay_us(20);
   *regDat=sccb_bus_read_byte();
-  sccb_bus_send_noack();
-  sccb_bus_stop();
   return(1);
-	*/
 }
