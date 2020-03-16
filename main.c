@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdbool.h>
-#include "ArduCAM.h"
+#include "main.h"
 
 void Init_USARTx() {
 	UART1_Init();
@@ -25,17 +25,12 @@ void Init_IR_Sensor(){
 void configs(){
 	System_Clock_Init(); // Switch System Clock = 80 MHz
 	Init_USARTx();
-		// Set baud rate = 460800
-		// USART1_UART_Init(460800)
+	
+	SysTick_Init();
+	SPI1_Init();
 
-	NVIC_Configuration();
-	SystemInit();
-
-	delay_init();
-	ArduCAM_CS_init();
-
-	sccb_bus_init();
-	SPI2_Init();
+	// sccb_bus_init();
+	//ArduCAM_Init(sensor_model);
 }
 
 void check_SPI_interface(){
@@ -44,7 +39,7 @@ void check_SPI_interface(){
 		write_reg(ARDUCHIP_TEST1, 0x55);
 		temp = read_reg(ARDUCHIP_TEST1);
 		if (temp != 0x55){
-			printf("ACK CMD SPI interface Error!\n");
+			printf("ACK CMD SPI interface Error! Value of temp: %d\n", temp);
 			delay_ms(1000);
 			continue;
 		}
@@ -76,11 +71,11 @@ int main(void){
 	configs();
 	check_SPI_interface();
 	// find_cam_module();
-	ArduCAM_Init(sensor_model);
-
+	
+	/*
 	while(1){
 		// Currently B2: probably will have to change
-		int motion_detected = ((GPIOB->IDR & GPIO_IDR_ID2) == GPIO_IDR_ID2);
+		// int motion_detected = ((GPIOB->IDR & GPIO_IDR_ID2) == GPIO_IDR_ID2);
 
 		// Change dis
 		if (1){
@@ -89,4 +84,5 @@ int main(void){
 			SendbyUSART1();
 		}
 	}
+	*/
 }

@@ -1,30 +1,11 @@
-#include "usart.h"	 
+#include "usart.h"
+#include "uart.h"
 
 unsigned char USART1_RecieveData;
 unsigned char NewCMD = 0;
-//////////////////////////////////////////////////////////////////
-//Add the below code to support printf 
-#if 1
-#pragma import(__use_no_semihosting)                             
-struct __FILE { 
-	int handle; 
-}; 
-
-FILE __stdout;       
-//define _sys_exit()   
-void _sys_exit(int x) { 
-	x = x; 
-} 
-//Redefine fputc function 
-int fputc(int ch, FILE *f){      
-	while((USART1->SR&0X40)==0){;}  
-    USART1->DR = (u8) ch;      
-	return ch;
-}
-
-#endif 
 
 void USART1_UART_Init(uint32_t BaudRate){
+	/*
 	GPIO_InitTypeDef GPIO_InitStructure;
 	NVIC_InitTypeDef NVIC_InitStructure;
 	USART_InitTypeDef USART_InitStructure;
@@ -56,23 +37,23 @@ void USART1_UART_Init(uint32_t BaudRate){
   	USART_Init(USART1, &USART_InitStructure);
   	USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);
   	USART_Cmd(USART1, ENABLE);
+		*/
 }
 
-
 void UART1_BulkOut(uint32_t len, uint8_t *p){
-	uint32_t cnt =0;
-	for(cnt=0;cnt!=len;cnt++){	    
-  		while(USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET);
-		USART_SendData(USART1, *p);
+	for (uint32_t cnt = 0; cnt != len; cnt++){    
+  		// while(USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET);
+  		USART_Write(USART1, *p, 1);
     	p++;    
 	}
 }
 
+/*
 void USART1_IRQHandler(void){
 	if(USART_GetITStatus(USART1, USART_IT_RXNE) != RESET){
 		USART_ClearITPendingBit(USART1, USART_IT_RXNE);
 		USART1_RecieveData = USART_ReceiveData(USART1);
 		NewCMD = 1;
-	}   		     
+	} 
 }
-
+*/

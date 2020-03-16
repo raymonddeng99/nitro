@@ -1,4 +1,3 @@
-#include "arducam_conf.h"
 #include "ArduCAM.h"
 #include "spi.h"
 #include "sccb_bus.h"
@@ -24,43 +23,34 @@ void ArduCAM_Init(byte model){
 }
 
 void ArduCAM_CS_init(void){
-	// Enable HSI
-	RCC->CR |= RCC_CR_HSION;
-	while((RCC->CR & RCC_CR_HSIRDY) == 0);
-	
-	// Select HSI as system clock source
-	RCC->CFGR &= ~RCC_CFGR_SW;
-	RCC->CFGR |= RCC_CFGR_SW_HSI;
-	while((RCC->CFGR & RCC_CFGR_SWS) == 0);
-	
 	// Enable GPIO Clocks
-	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOBEN;
+	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOEEN;
 	
 	
-	// Set PB1 to output mode
-	GPIOB->MODER &= ~GPIO_MODER_MODE1;
-	GPIOB->MODER |= GPIO_MODER_MODE1_0;
+	// Set PE12 to output mode
+	GPIOE->MODER &= ~GPIO_MODER_MODE12;
+	GPIOE->MODER |= GPIO_MODER_MODE12_0;
 
-	//Configure PB1 output speed to very fast
-	GPIOB->OSPEEDR |= GPIO_OSPEEDR_OSPEED1;
+	//Configure PE12 output speed to very fast
+	GPIOE->OSPEEDR |= GPIO_OSPEEDR_OSPEED12;
 	
-	//Configure PB1 output type as Push-Pull
-	GPIOB->OTYPER &= ~GPIO_OTYPER_OT1;
+	//Configure PE12 output type as Push-Pull
+	GPIOE->OTYPER &= ~GPIO_OTYPER_OT12;
 	
-	//Configure PB1 output type as No Pull-Up, No Pull-Down
-	GPIOB->PUPDR &= ~GPIO_PUPDR_PUPD2;
+	//Configure PE12 output type as No Pull-Up, No Pull-Down
+	GPIOE->PUPDR &= ~GPIO_PUPDR_PUPD12;
 
 	CS_HIGH();
 }
 
-// CS_PORT = B
-// CS_PIN = 1
+// CS_PORT = E
+// CS_PIN = 12
 void CS_HIGH(void){
-	GPIOB->ODR |= GPIO_ODR_OD1;				
+	GPIOE->ODR |= GPIO_ODR_OD12;		
 }
 
 void CS_LOW(void){
-	GPIOB->ODR &= ~(GPIO_ODR_OD1);			    
+	GPIOE->ODR &= ~(GPIO_ODR_OD12);			    
 }
 
 void set_format(byte fmt){
@@ -70,8 +60,8 @@ void set_format(byte fmt){
 uint8_t bus_read(int address){
 	uint8_t value;
 	CS_LOW();
-	SPI2_ReadWriteByte(address);
-	value = SPI2_ReadWriteByte(0x00);
+	SPI1_ReadWriteByte(address);
+	value = SPI1_ReadWriteByte(0x00);
 	CS_HIGH();
 	return value;
 }
@@ -79,8 +69,8 @@ uint8_t bus_read(int address){
 uint8_t bus_write(int address,int value){	
 	CS_LOW();
 	delay_us(10);
-	SPI2_ReadWriteByte(address);
-	SPI2_ReadWriteByte(value);
+	SPI1_ReadWriteByte(address);
+	SPI1_ReadWriteByte(value);
 	delay_us(10);
 	CS_HIGH();
 	return 1;
@@ -102,7 +92,7 @@ uint8_t read_fifo(void){
 }
 
 void set_fifo_burst(){
-	SPI2_ReadWriteByte(BURST_FIFO_READ);
+	SPI1_ReadWriteByte(BURST_FIFO_READ);
 }
 
 void flush_fifo(void){
@@ -170,6 +160,7 @@ void set_mode(uint8_t mode){
 }
 
 byte wrSensorReg8_8(int regID, int regDat){
+	/*
 	delay_us(5);
 	sccb_bus_start();                          
 	if(sccb_bus_write_byte(sensor_addr) == 0){
@@ -188,11 +179,12 @@ byte wrSensorReg8_8(int regID, int regDat){
 	}
 	sccb_bus_stop();                                    
 	return 0;
+	*/
 }
 
 
-byte rdSensorReg8_8(uint8_t regID, uint8_t* regDat)
-{
+byte rdSensorReg8_8(uint8_t regID, uint8_t* regDat){
+	/*
 	delay_us(10);
 	
 	sccb_bus_start();
@@ -222,12 +214,13 @@ byte rdSensorReg8_8(uint8_t regID, uint8_t* regDat)
 	*regDat = sccb_bus_read_byte();                    
 	sccb_bus_send_noack();                                
 	sccb_bus_stop();                                      
-	return 0;                
+	return 0;    
+*/	
 }
 
 //I2C Array Write 8bit address, 8bit data
-int wrSensorRegs8_8(const struct sensor_reg reglist[])
-{
+int wrSensorRegs8_8(const struct sensor_reg reglist[]){
+	/*
   int err = 0;
   uint16_t reg_addr = 0;
   uint16_t reg_val = 0;
@@ -242,10 +235,11 @@ int wrSensorRegs8_8(const struct sensor_reg reglist[])
   }
 
   return err;
+	*/
 }
 
-byte wrSensorReg16_8(int regID, int regDat)
-{
+byte wrSensorReg16_8(int regID, int regDat){
+	/*
 	sccb_bus_start();
 	if(0==sccb_bus_write_byte(sensor_addr))
 	{
@@ -273,10 +267,11 @@ byte wrSensorReg16_8(int regID, int regDat)
   sccb_bus_stop();
 	
   return(1);
+	*/
 }
 
-int wrSensorRegs16_8(const struct sensor_reg reglist[])
-{
+int wrSensorRegs16_8(const struct sensor_reg reglist[]){
+	/*
   int err = 0;
 
   unsigned int reg_addr;
@@ -292,11 +287,12 @@ int wrSensorRegs16_8(const struct sensor_reg reglist[])
     next++;
   }
   return err;
+	*/
 }
 
 
-byte rdSensorReg16_8(uint16_t regID, uint8_t* regDat)
-{
+byte rdSensorReg16_8(uint16_t regID, uint8_t* regDat){
+	/*
 	sccb_bus_start();                  
 	if(0==sccb_bus_write_byte(0x78))
 	{
@@ -333,4 +329,5 @@ byte rdSensorReg16_8(uint16_t regID, uint8_t* regDat)
   sccb_bus_send_noack();
   sccb_bus_stop();
   return(1);
+	*/
 }

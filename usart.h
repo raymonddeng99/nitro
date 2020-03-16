@@ -1,7 +1,7 @@
 #ifndef __USART_H
 #define __USART_H
 
-#include "main.h" 
+#include "main.h"
 
 extern unsigned char USART1_RecieveData;
 extern unsigned char NewCMD;

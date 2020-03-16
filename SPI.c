@@ -1,4 +1,7 @@
 #include "spi.h"
+#include "stm32l476xx.h"
+
+#include <stdbool.h>
 
 #define BMPIMAGEOFFSET 66
 #define pgm_read_byte(x)        (*((char *)x))
@@ -21,118 +24,124 @@ uint8_t  EP2_SendFinish = 1;
 uint8_t	Buf1[BUFFER_MAX_SIZE]={0}, Buf2[BUFFER_MAX_SIZE]={0};
 extern uint16_t NumPackage;
 
-void SPI2_GPIO_Init(){
-	// Configure PB[13, 15] to desired settings
+void SPI1_GPIO_Init(){
+	// Configure PE[13, 15] to desired settings
 
-	// Enable clock for PB[13, 15]
-	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOBEN;
+	// Enable clock for PE[13, 15]
+	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOEEN;
 	
 	// Set all GPIO pins to alternative function mode (AF5)
-	GPIOB->MODER &= ~(GPIO_MODER_MODE13);
-	GPIOB->MODER &= ~(GPIO_MODER_MODE14);
-	GPIOB->MODER &= ~(GPIO_MODER_MODE15);
-	GPIOB->MODER |= GPIO_MODER_MODE13_1;
-	GPIOB->MODER |= GPIO_MODER_MODE14_1;
-	GPIOB->MODER |= GPIO_MODER_MODE15_1;
+	GPIOE->MODER &= ~(GPIO_MODER_MODE13);
+	GPIOE->MODER &= ~(GPIO_MODER_MODE14);
+	GPIOE->MODER &= ~(GPIO_MODER_MODE15);
+	GPIOE->MODER |= GPIO_MODER_MODE13_1;
+	GPIOE->MODER |= GPIO_MODER_MODE14_1;
+	GPIOE->MODER |= GPIO_MODER_MODE15_1;
 	
-	GPIOB->AFR[1] &= ~(GPIO_AFRH_AFSEL13);
-	GPIOB->AFR[1] |= GPIO_AFRH_AFSEL13_0;
-	GPIOB->AFR[1] |= GPIO_AFRH_AFSEL13_2;
+	GPIOE->AFR[1] &= ~(GPIO_AFRH_AFSEL13);
+	GPIOE->AFR[1] |= GPIO_AFRH_AFSEL13_0;
+	GPIOE->AFR[1] |= GPIO_AFRH_AFSEL13_2;
 	
-	GPIOB->AFR[1] &= ~(GPIO_AFRH_AFSEL14);
-	GPIOB->AFR[1] |= GPIO_AFRH_AFSEL14_0;
-	GPIOB->AFR[1] |= GPIO_AFRH_AFSEL14_2;
+	GPIOE->AFR[1] &= ~(GPIO_AFRH_AFSEL14);
+	GPIOE->AFR[1] |= GPIO_AFRH_AFSEL14_0;
+	GPIOE->AFR[1] |= GPIO_AFRH_AFSEL14_2;
 	
-	GPIOB->AFR[1] &= ~(GPIO_AFRH_AFSEL15);
-	GPIOB->AFR[1] |= GPIO_AFRH_AFSEL15_0;
-	GPIOB->AFR[1] |= GPIO_AFRH_AFSEL15_2;
+	GPIOE->AFR[1] &= ~(GPIO_AFRH_AFSEL15);
+	GPIOE->AFR[1] |= GPIO_AFRH_AFSEL15_0;
+	GPIOE->AFR[1] |= GPIO_AFRH_AFSEL15_2;
 	
 
 	// Set all pins to very high speed
-	GPIOB->OSPEEDR &= ~(GPIO_OSPEEDR_OSPEED13);
-	GPIOB->OSPEEDR &= ~(GPIO_OSPEEDR_OSPEED14);
-	GPIOB->OSPEEDR &= ~(GPIO_OSPEEDR_OSPEED15);
-	GPIOB->OSPEEDR |= GPIO_OSPEEDR_OSPEED13;
-	GPIOB->OSPEEDR |= GPIO_OSPEEDR_OSPEED14;
-	GPIOB->OSPEEDR |= GPIO_OSPEEDR_OSPEED15;
+	GPIOE->OSPEEDR &= ~(GPIO_OSPEEDR_OSPEED13);
+	GPIOE->OSPEEDR &= ~(GPIO_OSPEEDR_OSPEED14);
+	GPIOE->OSPEEDR &= ~(GPIO_OSPEEDR_OSPEED15);
+	GPIOE->OSPEEDR |= GPIO_OSPEEDR_OSPEED13;
+	GPIOE->OSPEEDR |= GPIO_OSPEEDR_OSPEED14;
+	GPIOE->OSPEEDR |= GPIO_OSPEEDR_OSPEED15;
 
 	// Set all pins to have a push-pull output type
-	GPIOB->OTYPER &= ~(GPIO_OTYPER_OT13);
-	GPIOB->OTYPER &= ~(GPIO_OTYPER_OT14);
-	GPIOB->OTYPER &= ~(GPIO_OTYPER_OT15);
+	GPIOE->OTYPER &= ~(GPIO_OTYPER_OT13);
+	GPIOE->OTYPER &= ~(GPIO_OTYPER_OT14);
+	GPIOE->OTYPER &= ~(GPIO_OTYPER_OT15);
 
 	// Configure all GPIO pins to no pull-up, pull-down
-	GPIOB->PUPDR &= ~(GPIO_PUPDR_PUPD13);
-	GPIOB->PUPDR &= ~(GPIO_PUPDR_PUPD14);
-	GPIOB->PUPDR &= ~(GPIO_PUPDR_PUPD15);
+	GPIOE->PUPDR &= ~(GPIO_PUPDR_PUPD13);
+	GPIOE->PUPDR &= ~(GPIO_PUPDR_PUPD14);
+	GPIOE->PUPDR &= ~(GPIO_PUPDR_PUPD15);
 }
 
 void SPI_Init(void){
-	SPI2->CR1 &= ~(SPI_CR1_SPE);
+	printf("Start of SPI_Init()\n");
+	SPI1->CR1 &= ~(SPI_CR1_SPE);
 	
-	// Enable SPI2 clock in peripheral clock register
-	RCC->APB1ENR1 |= RCC_APB1ENR1_SPI2EN;
+	// Enable SPI1 clock in peripheral clock register
+	RCC->APB2ENR |= RCC_APB2ENR_SPI1EN;
 
-	// Reset SPI2 by setting appropriate bits in peripheral reset register
-	RCC->APB1RSTR1 |= RCC_APB1RSTR1_SPI2RST;
+	// Reset SPI1 by setting appropriate bits in peripheral reset register
+	RCC->APB2RSTR |= RCC_APB2RSTR_SPI1RST;
 
-	// Clear bits so SPI2 does not remain in a reset state
-	RCC->APB1RSTR1 &= ~(RCC_APB1RSTR1_SPI2RST);
+	// Clear bits so SPI1 does not remain in a reset state
+	RCC->APB2RSTR &= ~(RCC_APB2RSTR_SPI1RST);
 
 	// Configure the serial channel for full duplex communication
-	SPI2->CR1 &= ~(SPI_CR1_RXONLY);
+	SPI1->CR1 &= ~(SPI_CR1_RXONLY);
 
 	// Configure the communication for 2-line unidirectional data mode
-	SPI2->CR1 &= ~(SPI_CR1_BIDIMODE);
+	SPI1->CR1 &= ~(SPI_CR1_BIDIMODE);
 
 	// Disable output in bidirectional mode
-	SPI2->CR1 &= ~(SPI_CR1_BIDIOE);
+	//		CHANGE TO: Enable output in bidirectional mode
+	SPI1->CR1 |= SPI_CR1_BIDIOE;	
 
 	// Set: 
 	//		the data frame for receiving the MSB first when data is transmitted
-	SPI2->CR1 &= ~(SPI_CR1_LSBFIRST);
+	SPI1->CR1 &= ~(SPI_CR1_LSBFIRST);
 
 	// 		the data length to 8 bits
-	SPI2->CR2 &= ~(SPI_CR2_DS);
-	SPI2->CR2 |= SPI_CR2_DS;
-	SPI2->CR2 &= ~(SPI_CR2_DS_3);
+	SPI1->CR2 &= ~(SPI_CR2_DS);
+	SPI1->CR2 |= SPI_CR2_DS;
+	SPI1->CR2 &= ~(SPI_CR2_DS_3);
 
 	//		the frame format to be in SPI Motorola mode
-	SPI2->CR2 &= ~(SPI_CR2_FRF);
+	SPI1->CR2 &= ~(SPI_CR2_FRF);
 
 	// Set: 
 	//		the clock polarity to 0
-	SPI2->CR1 &= ~(SPI_CR1_CPOL);
+	SPI1->CR1 &= ~(SPI_CR1_CPOL);
 
 	//		the clock phase s.t. the first clock transition is the first data capture edge
-	SPI2->CR1 &= ~(SPI_CR1_CPHA);
+	SPI1->CR1 &= ~(SPI_CR1_CPHA);
 
 	// Set the baud rate prescaler to 16
-	SPI2->CR1 &= ~(SPI_CR1_BR);
-	SPI2->CR1 |= SPI_CR1_BR;
-	SPI2->CR1 &= ~(SPI_CR1_BR_2);
+	//		CHANGE TO: Set the baud rate prescaler to 8
+	SPI1->CR1 &= ~(SPI_CR1_BR);
+	//SPI1->CR1 |= SPI_CR1_BR;
+	//SPI1->CR1 &= ~(SPI_CR1_BR_1);
+	SPI1->CR1 |= SPI_CR1_BR_1;
 
 	// Disable CRC calculation
-	SPI2->CR1 &= ~(SPI_CR1_CRCEN);
+	//		CHANGE TO: Enable CRC calculation
+	SPI1->CR1 |= (SPI_CR1_CRCEN);
 
 	// Set: 
 	//		the board to operate in master mode
-	SPI2->CR1 |= SPI_CR1_MSTR;
+	SPI1->CR1 |= SPI_CR1_MSTR;
 
 	//		enable software slave management
-	SPI2->CR1 |= SPI_CR1_SSM;
+	//		CHANGE TO: disable software slave management
+	SPI1->CR1 &= ~(SPI_CR1_SSM);
 
 	//		enable NSS pulse management
-	SPI2->CR2 |= SPI_CR2_NSSP;
+	SPI1->CR2 |= SPI_CR2_NSSP;
 
-	// Set the internal slave bit
-	SPI2->CR1 |= SPI_CR1_SSI;
+	// Disable internal slave bit
+	SPI1->CR1 &= ~(SPI_CR1_SSI);
 
 	// Set the FIFO reception threshold to 1/4 (8 bit)
-	SPI2->CR2 |= SPI_CR2_FRXTH;
+	SPI1->CR2 |= SPI_CR2_FRXTH;
 
 	// Enable SPI 
-	SPI2->CR1 |= SPI_CR1_SPE;
+	SPI1->CR1 |= SPI_CR1_SPE;
 }
 
 /*
@@ -145,80 +154,80 @@ void SPI_Init(void){
 	Channel 6, request num 2: USART1_TX
 */
 void DMA_config(){
-	// Set peripheral register address in DMA_CPARx register (!!!!!)
+	// Set peripheral register address in DMA->CPARx register (!!!!!)
 	/*
-	DMA_InitStructure.DMA_PeripheralBaseAddr = (u32)&SPI2->DR;
-  	DMA_InitStructure.DMA_PeripheralBaseAddr = (u32)&USART2->DR;
+	DMA->InitStructure.DMA->PeripheralBaseAddr = (u32)&SPI2->DR;
+  	DMA->InitStructure.DMA->PeripheralBaseAddr = (u32)&USART2->DR;
   	*/
 
-	DMA_CPAR4 = (u32)(SPI2_BASE + 0x0C)
-	DMA_CPAR5 = (u32)(SPI2_BASE + 0x0C)
-	DMA_CPAR6 = (u32)(USART2_BASE + 0x28)
+	DMA1_Channel4->CPAR = (u32)(SPI1_BASE + 0x0C);
+	DMA1_Channel5->CPAR = (u32)(SPI1_BASE + 0x0C);
+	DMA2_Channel6->CPAR = (u32)(USART2_BASE + 0x28);
 
-	// Set memory address in DMA_CMARx register
-	// Configure total amount of memory to be transferred in DMA_CNDTRx register
+	// Set memory address in DMA->CMARx register
+	// Configure total amount of memory to be transferred in DMA->CNDTRx register
 	// 			see DMA1_RX, DMA1_SendtoUsart
 
-	// Configure channel priority using PL[1:0] in DMA_CCRx 
-	DMA_CCR4 |= DMA_CCR_PL;
-	DMA_CCR4 &= ~(DMA_CCR_PL_0);
+	// Configure channel priority using PL[1:0] in DMA->CCRx 
+	DMA1_Channel4->CCR |= DMA_CCR_PL;
+	DMA1_Channel4->CCR &= ~(DMA_CCR_PL_0);
 
-	DMA_CCR5 |= DMA_CCR_PL;
-	DMA_CCR5 &= ~(DMA_CCR_PL_0);
+	DMA1_Channel5->CCR |= DMA_CCR_PL;
+	DMA1_Channel5->CCR &= ~(DMA_CCR_PL_0);
 
-	DMA_CCR6 |= DMA_CCR_PL;
+	DMA2_Channel5->CCR |= DMA_CCR_PL;
 
 	// Configure:
 	//		M2M mode (Arducam disables this)
-	DMA_CCR4 &= ~(DMA_CCR_MEM2MEM);
-	DMA_CCR5 &= ~(DMA_CCR_MEM2MEM);
-	DMA_CCR6 &= ~(DMA_CCR_MEM2MEM);
+	DMA1_Channel4->CCR &= ~(DMA_CCR_MEM2MEM);
+	DMA1_Channel5->CCR &= ~(DMA_CCR_MEM2MEM);
+	DMA2_Channel6->CCR &= ~(DMA_CCR_MEM2MEM);
 
 	//		data transfer direction
-	DMA_CCR4 &= ~(DMA_CCR_DIR);
-	DMA_CCR5 |= DMA_CCR_DIR;
-	DMA_CCR6 |= DMA_CCR_DIR;
+	DMA1_Channel4->CCR &= ~(DMA_CCR_DIR);
+	DMA1_Channel5->CCR |= DMA_CCR_DIR;
+	DMA2_Channel6->CCR |= DMA_CCR_DIR;
 
 	//		circular mode
-	DMA_CCR4 &= ~(DMA_CCR_CIRC);
-	DMA_CCR5 &= ~(DMA_CCR_CIRC);
-	DMA_CCR6 &= ~(DMA_CCR_CIRC);
+	DMA1_Channel4->CCR &= ~(DMA_CCR_CIRC);
+	DMA1_Channel5->CCR &= ~(DMA_CCR_CIRC);
+	DMA2_Channel6->CCR &= ~(DMA_CCR_CIRC);
 
 
 	//		peripheral and memory incremented mode
-	DMA_CCR4 |= DMA_CCR_MINC;
-	DMA_CCR4 &= ~(DMA_CCR_PINC);
+	DMA1_Channel4->CCR |= DMA_CCR_MINC;
+	DMA1_Channel4->CCR &= ~(DMA_CCR_PINC);
 
-	DMA_CCR5 |= DMA_CCR_MINC;
-	DMA_CCR5 &= ~(DMA_CCR_PINC);
+	DMA1_Channel5->CCR |= DMA_CCR_MINC;
+	DMA1_Channel5->CCR &= ~(DMA_CCR_PINC);
 
-	DMA_CCR6 |= DMA_CCR_MINC;
-	DMA_CCR6 &= ~(DMA_CCR_PINC);
+	DMA2_Channel6->CCR |= DMA_CCR_MINC;
+	DMA2_Channel6->CCR &= ~(DMA_CCR_PINC);
 
 	//		peripheral data size
-	DMA_CCR4 |= DMA_CCR_PSIZE;
-	DMA_CCR4 &= ~(DMA_CCR_PSIZE_0);
+	DMA1_Channel4->CCR |= DMA_CCR_PSIZE;
+	DMA1_Channel4->CCR &= ~(DMA_CCR_PSIZE_0);
 
-	DMA_CCR5 |= DMA_CCR_PSIZE;
-	DMA_CCR5 &= ~(DMA_CCR_PSIZE_0);
+	DMA1_Channel5->CCR |= DMA_CCR_PSIZE;
+	DMA1_Channel5->CCR &= ~(DMA_CCR_PSIZE_0);
 
-	DMA_CCR6 |= DMA_CCR_PSIZE;
-	DMA_CCR6 &= ~(DMA_CCR_PSIZE_0);
+	DMA2_Channel6->CCR |= DMA_CCR_PSIZE;
+	DMA2_Channel6->CCR &= ~(DMA_CCR_PSIZE_0);
 
 	// 		memory data size
-	DMA_CCR4 |= DMA_CCR_MSIZE;
-	DMA_CCR4 &= ~(DMA_CCR_MSIZE_0);
+	DMA1_Channel4->CCR |= DMA_CCR_MSIZE;
+	DMA1_Channel4->CCR &= ~(DMA_CCR_MSIZE_0);
 
-	DMA_CCR5 |= DMA_CCR_MSIZE;
-	DMA_CCR5 &= ~(DMA_CCR_MSIZE_0);
+	DMA1_Channel5->CCR |= DMA_CCR_MSIZE;
+	DMA1_Channel5->CCR &= ~(DMA_CCR_MSIZE_0);
 
-	DMA_CCR6 |= DMA_CCR_MSIZE;
-	DMA_CCR6 &= ~(DMA_CCR_MSIZE_0);
+	DMA2_Channel6->CCR |= DMA_CCR_MSIZE;
+	DMA2_Channel6->CCR &= ~(DMA_CCR_MSIZE_0);
 
-	//		interrupt after half/full transfer in DMA_CCRx register
-	DMA_CCR4 |= DMA_CCR_TCIE;
-	DMA_CCR5 |= DMA_CCR_TCIE;  
-	DMA_CCR6 |= DMA_CCR_TCIE;
+	//		interrupt after half/full transfer in DMA->CCRx register
+	DMA1_Channel4->CCR |= DMA_CCR_TCIE;
+	DMA1_Channel5->CCR |= DMA_CCR_TCIE;  
+	DMA2_Channel6->CCR |= DMA_CCR_TCIE;
 }
 
 void NVIC_Config(){
@@ -229,27 +238,24 @@ void NVIC_Config(){
 	NVIC_SetPriority(DMA1_Channel6_IRQn, 0);
 }
 
-void SPI2_Init(void){
-	SPI2_GPIO_Init();
+void SPI1_Init(void){
+	//RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;
+	
+	SPI1_GPIO_Init();
+	ArduCAM_CS_init();
 	SPI_Init();
 
-	SPI2_ReadWriteByte(0xff);
+	SPI1_ReadWriteByte(0xff);
 
-	DMA_Config();
-	NVIC_Config();
+	//DMA_config();
+	//NVIC_Config();
 }
- 
-void SPI2_SetSpeed(u8 SPI_BaudRatePrescaler){
-  	assert_param(IS_SPI_BAUDRATE_PRESCALER(SPI_BaudRatePrescaler));
-	SPI2->CR1 &= 0XFFC7;
-	SPI2->CR1|= SPI_BaudRatePrescaler;
-	SPI2->CR1 |= SPI_CR1_SPE
-} 
 
-u8 SPI2_ReadWriteByte(u8 TxData){
-	uint8_t rxBuffer[32];
-	SPI_Write(SPI2, TxData, rxBuffer, 1)
-	return SPI_Read(SPI2, rxBuffer, 1)				    
+u8 SPI1_ReadWriteByte(u8 TxData){
+	uint8_t rxBuffer;
+	SPI_Write(SPI1, &TxData, rxBuffer, 1);
+	SPI_Read(SPI1, rxBuffer, 1);
+	return rxBuffer;
 }
 
 
@@ -258,11 +264,11 @@ u8 SPI2_ReadWriteByte(u8 TxData){
 
 	"If the channel is configured in non-circular mode, no DMA request is served after the last transfer
 	(that is once the num of data items to be transferred has reached zero). In order to reload a new number
-	of data items to be transferred into the DMA_CNDTRx register, the DMA channel must be disabled".
+	of data items to be transferred into the DMA->CNDTRx register, the DMA channel must be disabled".
 
-	"In circular mode, after the last transfer, the DMA_CNDTRx register is automatically reloaded with the initially
+	"In circular mode, after the last transfer, the DMA->CNDTRx register is automatically reloaded with the initially
 	programmed value. The current internal address registers are reloaded with the base address values from the 
-	DMA_CPARx/DMA_CMARx registers".
+	DMA->CPARx/DMA->CMARx registers".
 */
 
 void DMA1_RX(uint8_t *p , uint32_t len){		
@@ -270,7 +276,7 @@ void DMA1_RX(uint8_t *p , uint32_t len){
 	set_fifo_burst();
 
 	if (len > 65535){
-		printf("DMA1RX: DMA_CNDTR only allows values up to 65535. len: %p:\n", len);
+		printf("DMA1RX: DMA->CNDTR only allows values up to 65535. len: %p:\n", len);
 		return;
 	}
 
@@ -279,33 +285,38 @@ void DMA1_RX(uint8_t *p , uint32_t len){
 		when MSIZE = 10 (32 bit), MA[1:0] bits are ignored.
 		Do I left shift address by 2?
 	*/
-
-	DMA_CMAR4 = (u32)p << 2;
-	DMA_CNDTR4 = (u16)len;
-	DMA_CMAR5 = (u32)p << 2;
-	DMA_CNDTR5 = (u16)len;
+	
+	DMA1_Channel4->CMAR = (u32)p << 2;
+	DMA1_Channel4->CNDTR = (u16)len;
+	DMA1_Channel5->CMAR = (u32)p << 2;
+	DMA1_Channel5->CNDTR = (u16)len;
+	/*
+	
+	Syntax errors here:
 
 	DMA1_CSELR &= ~(DMA_CSELR_C4S | DMA_CSELR_C5S);
 	DMA1_CSELR |= (1 << 12 | 1 << 16);
 
 	DMA2_CSELR &= ~(DMA_CSELR_C6S);
 	DMA2_CSELR |= (1 << 21);
+	
+	*/
 
-	// Active channel by setting ENABLE bit in DMA_CCRx register
-	DMA_CCR4 |= DMA_CCR_EN;
-	DMA_CCR5 |= DMA_CCR_EN;
+	// Active channel by setting ENABLE bit in DMA->CCRx register
+	DMA1_Channel4->CCR |= DMA_CCR_EN;
+	DMA1_Channel5->CCR |= DMA_CCR_EN;
 }
 
 void DMA1_SendtoUsart(uint8_t *p , uint32_t len){
 	if (len > 65535){
-		printf("DMA1RX: DMA_CNDTR only allows values up to 65535. len: %p:\n", len);
+		printf("DMA1RX: DMA->CNDTR only allows values up to 65535. len: %p:\n", len);
 		return;
 	}
 
-	DMA_CMAR6 = (u32)p << 2;
-	DMA_CNDTR6 = (u16)len;
+	DMA2_Channel6->CMAR = (u32)p << 2;
+	DMA2_Channel6->CNDTR = (u16)len;
 
-	DMA_CCR6 |= DMA_CCR_EN;
+	DMA2_Channel6->CCR |= DMA_CCR_EN;
 }
 
 void SendbyUSART1(void){	
@@ -346,24 +357,28 @@ void SingleCapTransfer(void){
 }
 
 void DMA4_Channel1_IRQHandler(void){ 	
-	if(DMA_GetITStatus(DMA1_IT_TC4)){
-		DMA_ClearITPendingBit(DMA1_IT_GL4 | DMA1_IT_TC4 | DMA1_IT_GL5 | DMA1_IT_TC5);
+	/*
+	if(DMA->GetITStatus(DMA1_IT_TC4)){
+		DMA->ClearITPendingBit(DMA1_IT_GL4 | DMA1_IT_TC4 | DMA1_IT_GL5 | DMA1_IT_TC5);
 
-		DMA_CCR4 &= ~(DMA_CCR_EN);
-		DMA_CCR5 &= ~(DMA_CCR_EN);
+		DMA1_Channel4->CCR &= ~(DMA_CCR_EN);
+		DMA1_Channel5->CCR &= ~(DMA_CCR_EN);
 
 		// SPI_I2S_DMACmd(SPI2, SPI_I2S_DMAReq_Rx | SPI_I2S_DMAReq_Tx, DISABLE);
 		CS_HIGH();
 		receive_OK =1;
 	}
+	*/
 }
 
 
 void DMA6_Channel2_IRQHandler(void){
-	if(DMA_GetITStatus(DMA1_IT_TC7)){
-		DMA_ClearITPendingBit(DMA1_IT_GL7 | DMA1_IT_TC7);
-		DMA_CCR6 &= ~(DMA_CCR_EN);
+	/*
+	if(DMA->GetITStatus(DMA1_IT_TC7)){
+		DMA->ClearITPendingBit(DMA1_IT_GL7 | DMA1_IT_TC7);
+		DMA->CCR6 &= ~(DMA->CCR_EN);
 	}
+	*/
 }
  
 void SPI_Write(SPI_TypeDef * SPIx, uint8_t *txBuffer, uint8_t * rxBuffer, int size) {

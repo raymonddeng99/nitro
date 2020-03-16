@@ -9,15 +9,6 @@ void UART1_Init(void) {
 	RCC->CCIPR |= RCC_CCIPR_USART1SEL_0;
 }
 
-void UART2_Init(void) {
-	// Enable UART2 clock in peripheral clock register
-	RCC->APB1ENR1 |= RCC_APB1ENR1_USART2EN;
-
-	// Select system clock as UART2 clock source in peripheral independent clock config register
-	RCC->CCIPR &= ~(RCC_CCIPR_USART2SEL);
-	RCC->CCIPR |= RCC_CCIPR_USART2SEL_0;
-}
-
 void UART1_GPIO_Init(void) {
 	// Configure PB6, PB7 to operate as UART TX/RX
 
@@ -52,43 +43,6 @@ void UART1_GPIO_Init(void) {
 	GPIOB->PUPDR |= GPIO_PUPDR_PUPD7_0;
 }
 
-void UART2_GPIO_Init(void) {
-	// Configure PD5, PD6 to operate as UART TX/RX
-
-	// Enable clock for PD5, PD6
-	RCC->AHB2ENR |= RCC_AHB2ENR_GPIODEN;
-	
-	// Set both GPIO pins to alternative function mode (AF7)
-	GPIOD->MODER &= ~(GPIO_MODER_MODE5);
-	GPIOD->MODER &= ~(GPIO_MODER_MODE6);
-	GPIOD->MODER |= GPIO_MODER_MODE5_1;
-	GPIOD->MODER |= GPIO_MODER_MODE6_1;
-
-
-	GPIOD->AFR[0] |= GPIO_AFRL_AFSEL5;
-	GPIOD->AFR[0] &= ~(GPIO_AFRL_AFSEL5_3);
-	GPIOD->AFR[0] |= GPIO_AFRL_AFSEL6;
-	GPIOD->AFR[0] &= ~(GPIO_AFRL_AFSEL6_3);
-
-
-
-	// Set both pins to very high speed
-	GPIOD->OSPEEDR &= ~(GPIO_OSPEEDR_OSPEED5);
-	GPIOD->OSPEEDR &= ~(GPIO_OSPEEDR_OSPEED6);
-	GPIOD->OSPEEDR |= GPIO_OSPEEDR_OSPEED5;
-	GPIOD->OSPEEDR |= GPIO_OSPEEDR_OSPEED6;
-
-	// Set both pins to have a push-pull output type
-	GPIOD->OTYPER |= GPIO_OTYPER_OT5;
-	GPIOD->OTYPER |= GPIO_OTYPER_OT6;
-
-	// Configure both GPIO pins to use pull-up resistors for I/O
-	GPIOD->PUPDR &= ~GPIO_PUPDR_PUPD5;
-	GPIOD->PUPDR &= ~GPIO_PUPDR_PUPD6;
-	GPIOD->PUPDR |= GPIO_PUPDR_PUPD5_0;
-	GPIOD->PUPDR |= GPIO_PUPDR_PUPD6_0;
-}
-
 void USART_Init(USART_TypeDef* USARTx) {
 	USARTx->CR1 &= ~(USART_CR1_UE);
 
@@ -105,7 +59,7 @@ void USART_Init(USART_TypeDef* USARTx) {
 	// Set baud rate := 460800
 	// What is frequency of system clock? System clock freq = 80 MHz
 	// USART_DIV = f_CLK / TX_RX_Baud_Rate = 80 MHz / 460800 = 174
-	USARTx->BRR = 174;
+	USARTx->BRR = 8333;
 
 
 
@@ -115,14 +69,6 @@ void USART_Init(USART_TypeDef* USARTx) {
 
 	// Enable USART in control registers
 	USARTx->CR1 |= USART_CR1_UE;
-}
-
-void UART1_BulkOut(uint32_t len, uint8_t *p){
-	for (uint32_t cnt = 0; cnt != len; cnt++){    
-  		// while(USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET);
-  		USART_Write(USART1, *p, 1);
-    	p++;    
-	}
 }
 
 uint8_t USART_Read (USART_TypeDef * USARTx) {

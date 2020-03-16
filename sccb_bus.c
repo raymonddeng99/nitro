@@ -6,6 +6,7 @@
   * @brief   sccb bus
   */
 #include "sccb_bus.h"
+#include "I2C.h"
 #include "delay.h"
  uint32_t ntime;
 
@@ -28,7 +29,7 @@ void sccb_bus_init(void){
 	GPIOB->PUPDR &= ~(GPIO_PUPDR_PUPD2);
 
 	// B11: 50 MHz						 
-	GPIOB->OSPEEDR |= (GPIO_OPSEEDR_SPEED11)
+	GPIOB->OSPEEDR |= (GPIO_OSPEEDR_OSPEED11);
 
 
 
@@ -41,57 +42,6 @@ void sccb_bus_init(void){
 	
 	//B10: as No Pull-Up, No Pull-Down
 	GPIOB->PUPDR &= ~GPIO_PUPDR_PUPD10;
-
-	SCCB_DATA_OUT;
-}
-
-
-void sccb_bus_start(void){
-    SCCB_SID_H();             
-    delay_us(I2C_TIM);
-    SCCB_SIC_H();	           
-    delay_us(I2C_TIM);
-    SCCB_SID_L();
-    delay_us(I2C_TIM);
-    SCCB_SIC_L();	           
-    delay_us(I2C_TIM);
-}
-
-
-void sccb_bus_stop(void){
-    SCCB_SID_L();
-    delay_us(I2C_TIM);
-    SCCB_SIC_H();	
-    delay_us(I2C_TIM);  
-    SCCB_SID_H();	
-    delay_us(I2C_TIM);  
-}
-
-
-void sccb_bus_send_noack(void)
-{	
-	SCCB_SID_H();	
-	delay_us(I2C_TIM);	
-	SCCB_SIC_H();	
-	delay_us(I2C_TIM);	
-	SCCB_SIC_L();	
-	delay_us(I2C_TIM);	
-	SCCB_SID_L();	
-	delay_us(I2C_TIM);
-}
-
-void sccb_bus_send_ack(void)
-{	
-	SCCB_SID_L();	
-	delay_us(I2C_TIM);	
-	SCCB_SIC_L();	
-	delay_us(I2C_TIM);	
-	SCCB_SIC_H();	
-	delay_us(I2C_TIM);	
-	SCCB_SIC_L();	
-	delay_us(I2C_TIM);	
-	SCCB_SID_L();	
-	delay_us(I2C_TIM);
 }
 
 uint8_t sccb_bus_write_byte(uint8_t data){
@@ -104,7 +54,7 @@ uint8_t sccb_bus_write_byte(uint8_t data){
 
 uint8_t sccb_bus_read_byte(void){
 	uint8_t Data_Receive;	
-	I2CReadData(I2C1, 0x61, Data_Receive, 1);
+	I2C_ReceiveData(I2C1, 0x61, Data_Receive, 1);
 	return Data_Receive;
 }
 

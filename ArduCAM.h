@@ -1,9 +1,12 @@
 #ifndef __ARDUCAM_H
 #define __ARDUCAM_H
-#include "stdbool.h"
-#include "delay.h"
-#include "sys.h"
+#include "main.h"
 #define byte uint8_t
+
+
+typedef uint32_t u32;
+typedef uint16_t u16;
+typedef uint8_t u8;
 
 
 #define OV2640_CHIPID_HIGH 	0x0A
