@@ -113,8 +113,7 @@ void SPI_Init(void){
 	//		the board to operate in slave mode
 	SPI1->CR1 &= ~(SPI_CR1_MSTR);
 
-	//		enable software slave management
-	//		CHANGE TO: disable software slave management
+	//		disable software slave management
 	SPI1->CR1 &= ~(SPI_CR1_SSM);
 
 	//		enable NSS pulse management
