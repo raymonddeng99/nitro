@@ -1,5 +1,3 @@
-#include <stdio.h>
-#include <stdbool.h>
 #include "main.h"
 
 void Init_USARTx() {
@@ -26,29 +24,42 @@ void configs(){
 	System_Clock_Init(); // Switch System Clock = 80 MHz
 	Init_USARTx();
 	
+	Init_IR_Sensor();
+	
 	SysTick_Init();
 	SPI1_Init();
 }
 
 int main(void){
 	configs();
-
-	int num_faces_detected;
 	
+
 	while(1){
+		printf("running\n");
+		
 		int motion_detected = ((GPIOB->IDR & GPIO_IDR_ID2) == GPIO_IDR_ID2);
-
-		// Change dis
-		if (1){
-			printf("Motion detected!\n");
-
-			uint8_t start = 10;
-			uint8_t data_received;
-
-			SPI_Write(SPI1, start, data_received, 1);
+		
+		if (motion_detected){
+			printf("Motion detected! State of motion_detected: %d\n", motion_detected);
+ 
+			uint8_t start_code = 0x20;
+			uint8_t receiveData;
+			//uint8_t num_faces_detected;
+		
+			//delay(2);
+		
+			SPI_Write(SPI1, start_code, &receiveData, 1);
+		
+			//SPI_Read(SPI1, num_faces_detected, 1);
+		
+			//printf("Estimated number of people nearby: %d\n\n", num_faces_detected);
 		}
-
-		scanf("%d", &num_faces_detected);
-		printf("Estimated number of people nearby: %d", num_faces_detected);
+		
+		else{
+			uint8_t stop_code = 0x21;
+			uint8_t receiveData;
+			
+			SPI_Write(SPI1, stop_code, &receiveData, 1);
+		}
 	}
 }

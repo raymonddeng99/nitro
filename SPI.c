@@ -106,22 +106,11 @@ void SPI_Init(void){
 	//		the clock phase s.t. the first clock transition is the first data capture edge
 	SPI1->CR1 &= ~(SPI_CR1_CPHA);
 
-	// Set the baud rate prescaler to 16
-	SPI1->CR1 &= ~(SPI_CR1_BR);
-	SPI1->CR1 |= SPI_CR1_BR;
-	SPI1->CR1 &= ~(SPI_CR1_BR_1);
-
 	// Disable CRC calculation
 	SPI1->CR1 &= ~(SPI_CR1_CRCEN);
 
 	// Set: 
-	//		the board to operate in master mode
-
-
-
-	// CHANGED: slave mode?
-
-
+	//		the board to operate in slave mode
 	SPI1->CR1 &= ~(SPI_CR1_MSTR);
 
 	//		enable software slave management
@@ -139,6 +128,31 @@ void SPI_Init(void){
 
 	// Enable SPI 
 	SPI1->CR1 |= SPI_CR1_SPE;
+}
+
+void SPI1_CS_Init(){
+	// Clock already enabled for E pins
+	
+	// Set PE12 to AF mode
+	GPIOE->MODER &= ~(GPIO_MODER_MODE12);
+	//GPIOE->MODER |= GPIO_MODER_MODE12_0;
+	GPIOE->MODER |= GPIO_MODER_MODE12_1;
+	
+	// Set PE12 to very high speed
+	GPIOE->OSPEEDR &= ~(GPIO_OSPEEDR_OSPEED12);
+	GPIOE->OSPEEDR |= GPIO_OSPEEDR_OSPEED12;
+	
+	// Set PE12 to push-pull output type
+	GPIOE->OTYPER &= ~(GPIO_OTYPER_OT12);
+	
+	// Configure PE12 to no pull-up, pull-down
+	GPIOE->PUPDR &= ~(GPIO_PUPDR_PUPD12);
+}
+
+void SPI1_Init(){
+	SPI1_GPIO_Init();
+	SPI_Init();
+	SPI1_CS_Init();
 }
  
 void SPI_Write(SPI_TypeDef * SPIx, uint8_t *txBuffer, uint8_t * rxBuffer, int size) {

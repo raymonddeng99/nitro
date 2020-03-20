@@ -56,9 +56,9 @@ void USART_Init(USART_TypeDef* USARTx) {
 	USARTx->CR2 &= ~(USART_CR2_STOP);
 
 
-	// Set baud rate := 460800
+	// Set baud rate := 9600
 	// What is frequency of system clock? System clock freq = 80 MHz
-	// USART_DIV = f_CLK / TX_RX_Baud_Rate = 80 MHz / 460800 = 174
+	// USART_DIV = f_CLK / TX_RX_Baud_Rate = 80 MHz / 9600 = 8333
 	USARTx->BRR = 8333;
 
 
